@@ -14,6 +14,7 @@ export async function POST(request) {
         //Find the data 
         const findData = await Data.findOne({ uid: uid })
         if (!findData) {
+            console.log("new data")
             const newData = new Data({
                 uid: uid,
                 data: [{ date: new Date(), conversation: [segments] }]
@@ -21,14 +22,17 @@ export async function POST(request) {
             await newData.save()
             return NextResponse.json({ success: true })
         } else {
+            console.log("old data")
             //Here check whether today's data is present or not
             const todayData = findData.data.find((item) => item.date.toDateString() === new Date().toDateString())
             if (!todayData) {
+                console.log("today's data not found")
                 //if not find, make and push
                 findData.data.push({ date: new Date(), conversation: [segments] })
                 await findData.save()
                 return NextResponse.json({ success: true })
             } else {
+                console.log("today's data found")
                 //else push only the transcript
                 todayData.conversation.push(segments)
                 await findData.save()
