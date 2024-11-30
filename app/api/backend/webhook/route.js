@@ -8,15 +8,15 @@ export async function POST(request) {
         const uid = searchParams.get('uid');
         const body = await request.json();
         console.log(body)
-        const { transcript_segments } = body;
-        console.log(transcript_segments, uid)
+        const { segments } = body;
+        console.log(segments, uid)
         await connectDb()
         //Find the data 
         const findData = await Data.findOne({ uid: uid })
         if (!findData) {
             const newData = new Data({
                 uid: uid,
-                data: [{ date: new Date(), conversation: [transcript_segments] }]
+                data: [{ date: new Date(), conversation: [segments] }]
             })
             await newData.save()
             return NextResponse.json({ success: true })
@@ -25,12 +25,12 @@ export async function POST(request) {
             const todayData = findData.data.find((item) => item.date.toDateString() === new Date().toDateString())
             if (!todayData) {
                 //if not find, make and push
-                findData.data.push({ date: new Date(), conversation: [transcript_segments] })
+                findData.data.push({ date: new Date(), conversation: [segments] })
                 await findData.save()
                 return NextResponse.json({ success: true })
             } else {
                 //else push only the transcript
-                todayData.conversation.push(transcript_segments)
+                todayData.conversation.push(segments)
                 await findData.save()
                 return NextResponse.json({ success: true })
             }
