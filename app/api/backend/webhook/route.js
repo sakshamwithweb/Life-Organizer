@@ -33,21 +33,29 @@ export async function POST(request) {
         // Define the start of today for date comparison
         const today = startOfToday();
 
+        // Determine if 'segments' is an array
+        const isSegmentsArray = Array.isArray(segments);
+
+        // Prepare the conversation data to be pushed
+        const conversationData = isSegmentsArray ? { $each: segments } : segments;
+
         // Attempt to find and update the document atomically
         const updatedData = await Data.findOneAndUpdate(
             { uid, "data.date": today },
             {
-                $push: { "data.$.conversation": segments },
+                // Use $each if segments is an array to prevent nested arrays
+                $push: { "data.$.conversation": conversationData },
             },
             { new: true }
         );
 
         if (!updatedData) {
             // If today's data doesn't exist, push a new entry
+            const newConversation = isSegmentsArray ? segments : [segments];
             const newData = await Data.findOneAndUpdate(
                 { uid },
                 {
-                    $push: { data: { date: today, conversation: [segments] } },
+                    $push: { data: { date: today, conversation: newConversation } },
                 },
                 { new: true, upsert: true }
             );
