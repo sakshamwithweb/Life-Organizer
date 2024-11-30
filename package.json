@@ -9,9 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "cookie": "^1.0.2",
+    "crypto": "^1.0.1",
+    "mongoose": "^8.8.3",
+    "next": "15.0.3",
+    "nodemailer": "^6.9.16",
+    "openai": "^4.73.1",
     "react": "19.0.0-rc-66855b96-20241106",
     "react-dom": "19.0.0-rc-66855b96-20241106",
-    "next": "15.0.3"
+    "uuid4": "^2.0.3"
   },
   "devDependencies": {
     "postcss": "^8",
