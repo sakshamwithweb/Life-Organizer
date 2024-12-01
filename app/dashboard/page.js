@@ -1,5 +1,4 @@
 "use client";
-import { redirect } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 const DashboardPage = () => {
@@ -15,7 +14,7 @@ const DashboardPage = () => {
         const res = await req.json();
         console.log(res);
         if (!res.success) {
-          redirect("/enter");
+          window.location.href = "/enter";
         } else {
           setEmail(res.email);
           console.log("Hurray, you are logged in!");
