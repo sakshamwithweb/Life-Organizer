@@ -2,7 +2,6 @@ import { Data } from "@/lib/model/data";
 import { User } from "@/lib/model/register"; // Import User model
 import connectDb from "@/lib/mongoose";
 import { startOfDay } from "date-fns";
-import { utcToZonedTime } from "date-fns-tz"; // Correct import
 import { NextResponse } from "next/server";
 
 export async function POST(request) {
@@ -12,7 +11,7 @@ export async function POST(request) {
 
         // Parse URL and extract 'uid'
         const { searchParams } = new URL(request.url);
-        const uid = searchParams.get('uid');
+        const uid = searchParams.get("uid");
 
         if (!uid) {
             return NextResponse.json(
@@ -22,7 +21,7 @@ export async function POST(request) {
         }
 
         // Fetch the user and their timezone
-        const findUser = await User.findOne({ omi_userid: uid });
+        const findUser = await User.findOne({ uid: uid });
         if (!findUser) {
             return NextResponse.json(
                 { success: false, message: "User not found" },
@@ -43,9 +42,16 @@ export async function POST(request) {
             );
         }
 
-        // Calculate the start of today in the user's timezone
+        // Calculate the start of today in the user's timezone using Intl.DateTimeFormat
         const now = new Date();
-        const startOfTodayInTimeZone = startOfDay(utcToZonedTime(now, userTimeZone));
+        const startOfTodayInTimeZone = new Date(
+            new Intl.DateTimeFormat("en-US", {
+                timeZone: userTimeZone,
+                year: "numeric",
+                month: "numeric",
+                day: "numeric",
+            }).format(now)
+        );
         console.log("Start of Today (User TimeZone):", startOfTodayInTimeZone);
 
         // Determine if 'segments' is an array
@@ -70,7 +76,9 @@ export async function POST(request) {
             const newData = await Data.findOneAndUpdate(
                 { uid },
                 {
-                    $push: { data: { date: startOfTodayInTimeZone, conversation: newConversation } },
+                    $push: {
+                        data: { date: startOfTodayInTimeZone, conversation: newConversation },
+                    },
                 },
                 { new: true, upsert: true }
             );
