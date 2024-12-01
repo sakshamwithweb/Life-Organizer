@@ -1,8 +1,8 @@
 import { Data } from "@/lib/model/data";
-import { User } from "@/lib/model/register";
+import { User } from "@/lib/model/register"; // Import User model
 import connectDb from "@/lib/mongoose";
-import { format, startOfDay } from "date-fns";
-import { utcToZonedTime } from "date-fns-tz"; // Import for timezone conversion
+import { startOfDay } from "date-fns";
+import { utcToZonedTime } from "date-fns-tz"; // Correct import
 import { NextResponse } from "next/server";
 
 export async function POST(request) {
