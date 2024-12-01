@@ -116,7 +116,7 @@ export async function POST(request) {
     } catch (error) {
         console.error("Error in POST /api/backend/webhook:", error);
         return NextResponse.json(
-            { success: false, message: "Internal Server Error." },
+            { success: false, message: error.message },
             { status: 500 }
         );
     }
