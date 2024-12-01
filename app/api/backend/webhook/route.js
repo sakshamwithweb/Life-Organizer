@@ -69,6 +69,15 @@ export async function POST(request) {
                 },
                 { new: true, upsert: true }
             );
+            const prevDay = new Date(startOfTodayInTimeZone);
+            prevDay.setDate(prevDay.getDate() - 1);
+
+            const prevDayData = await Data.findOne({
+                uid,
+                "data.date": prevDay,
+            });
+            if (!prevDayData) return NextResponse.json({ success: false });
+            console.log(prevDayData);
 
             return NextResponse.json({ success: true, data: newData }, { status: 201 });
         }
