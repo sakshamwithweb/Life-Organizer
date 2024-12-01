@@ -2,8 +2,103 @@ import { Commitment } from "@/lib/model/commitment";
 import { Data } from "@/lib/model/data";
 import { User } from "@/lib/model/register";
 import connectDb from "@/lib/mongoose";
-import { startOfDay } from "date-fns";
 import { NextResponse } from "next/server";
+
+async function findUserByUid(uid) {
+    const user = await User.findOne({ omi_userid: uid });
+    if (!user) throw new Error("User not found");
+    return user;
+}
+
+function getStartOfTodayInTimeZone(timeZone) {
+    const now = new Date();
+    return new Date(
+        new Intl.DateTimeFormat("en-US", {
+            timeZone,
+            year: "numeric",
+            month: "numeric",
+            day: "numeric",
+        }).format(now)
+    );
+}
+
+async function fetchSummary(data) {
+    const response = await fetch(`${process.env.URL}/api/summarize`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data }),
+    });
+    const result = await response.json();
+    return result.message || null;
+}
+
+async function fetchCommitments(data) {
+    const response = await fetch(`${process.env.URL}/api/commitment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data }),
+    });
+    const result = await response.json();
+    if (result.success) return result.message;
+    throw new Error("Failed to fetch commitments");
+}
+
+async function handleNewData(uid, date, segments) {
+    const newData = await Data.findOneAndUpdate(
+        { uid },
+        {
+            $push: { data: { date, conversation: segments } },
+        },
+        { new: true, upsert: true }
+    );
+    return newData;
+}
+
+async function processPreviousDayData(uid, previousDate) {
+    const prevDayData = await Data.findOne({
+        uid,
+        "data.date": previousDate,
+    });
+
+    if (!prevDayData) return null;
+
+    const filteredData = prevDayData.data.find(
+        (item) => item.date.toISOString() === previousDate.toISOString()
+    );
+
+    if (!filteredData) return null;
+
+    const simplifiedConversation = filteredData.conversation.map(({ text, speaker, is_user }) => ({
+        text,
+        speaker,
+        is_user,
+    }));
+
+    const summary = await fetchSummary(simplifiedConversation);
+
+    if (summary) {
+        filteredData.summary = summary;
+        await Data.findOneAndUpdate(
+            { uid, "data.date": previousDate },
+            {
+                $set: { "data.$.summary": summary },
+            },
+            { new: true }
+        );
+
+        const commitments = await fetchCommitments(simplifiedConversation);
+
+        const existingCommitments = await Commitment.findOne({ uid });
+
+        if (!existingCommitments) {
+            const newCommitment = new Commitment({ uid, commitments });
+            await newCommitment.save();
+        } else {
+            commitments.forEach((commitment) => existingCommitments.commitments.push(commitment));
+            await existingCommitments.save();
+        }
+    }
+}
 
 export async function POST(request) {
     try {
@@ -12,142 +107,37 @@ export async function POST(request) {
         const { searchParams } = new URL(request.url);
         const uid = searchParams.get("uid");
 
-        if (!uid) {
-            return NextResponse.json(
-                { success: false, message: "Missing 'uid' parameter." },
-                { status: 400 }
-            );
-        }
+        if (!uid) return NextResponse.json({ success: false, message: "Missing 'uid' parameter." }, { status: 400 });
 
-        const findUser = await User.findOne({ omi_userid: uid });
-        if (!findUser) {
-            return NextResponse.json(
-                { success: false, message: "User not found" },
-                { status: 404 }
-            );
-        }
-        const userTimeZone = findUser.timeZone || "UTC";
+        const user = await findUserByUid(uid);
+        const userTimeZone = user.timeZone || "UTC";
 
         const body = await request.json();
         const { segments } = body;
 
         if (!segments) {
-            return NextResponse.json(
-                { success: false, message: "Missing 'segments' in request body." },
-                { status: 400 }
-            );
+            return NextResponse.json({ success: false, message: "Missing 'segments' in request body." }, { status: 400 });
         }
 
-        const now = new Date();
-        const startOfTodayInTimeZone = new Date(
-            new Intl.DateTimeFormat("en-US", {
-                timeZone: userTimeZone,
-                year: "numeric",
-                month: "numeric",
-                day: "numeric",
-            }).format(now)
-        );
-
-        const isSegmentsArray = Array.isArray(segments);
-        const conversationData = isSegmentsArray ? { $each: segments } : segments;
+        const startOfToday = getStartOfTodayInTimeZone(userTimeZone);
 
         const updatedData = await Data.findOneAndUpdate(
-            { uid, "data.date": startOfTodayInTimeZone },
-            {
-                $push: { "data.$.conversation": conversationData },
-            },
+            { uid, "data.date": startOfToday },
+            { $push: { "data.$.conversation": { $each: segments } } },
             { new: true }
         );
 
         if (!updatedData) {
-            const newConversation = isSegmentsArray ? segments : [segments];
-            const newData = await Data.findOneAndUpdate(
-                { uid },
-                {
-                    $push: {
-                        data: { date: startOfTodayInTimeZone, conversation: newConversation },
-                    },
-                },
-                { new: true, upsert: true }
-            );
-            const prevDay = new Date(startOfTodayInTimeZone);
+            const newData = await handleNewData(uid, startOfToday, segments);
+            const prevDay = new Date(startOfToday);
             prevDay.setDate(prevDay.getDate() - 1);
-
-            const prevDayData = await Data.findOne({
-                uid,
-                "data.date": prevDay,
-            });
-
-            if (!prevDayData) return NextResponse.json({ success: false });
-
-            const filteredData = prevDayData.data.find(item => item.date.toISOString() === prevDay.toISOString());
-
-            if (!filteredData) return NextResponse.json({ success: false });
-            const simplifiedConversation = filteredData.conversation.map(({ text, speaker, is_user }) => ({
-                text,
-                speaker,
-                is_user,
-            }));
-
-            const req2 = await fetch(`${process.env.URL}/api/summarize`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    data: simplifiedConversation
-                })
-            })
-            const res2 = await req2.json();
-            if (res2.message) {
-                filteredData.summary = res2.message;
-                await Data.findOneAndUpdate(
-                    { uid, "data.date": prevDay },
-                    {
-                        $set: { "data.$.conversation": filteredData.conversation, "data.$.summary": res2.message },
-                    },
-                    { new: true }
-                );
-                const req3 = await fetch(`${process.env.URL}/api/commitment`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        data: simplifiedConversation
-                    })
-                })
-                const res3 = await req3.json();
-                if (res3.message && res3.success) {
-                    const findCommit = await Commitment.findOne({ uid })
-                    if (!findCommit) {
-                        const newCommit = new Commitment({
-                            uid,
-                            commitments: res3.message
-                        });
-                        await newCommit.save();
-                        return NextResponse.json({ success: true, data: newData }, { status: 201 });
-                    }
-                    res3.message.forEach(commitment => {
-                        findCommit.commitments.push(commitment);
-                    });
-                    await findCommit.save();
-                    console.log("commitment made")
-                    return NextResponse.json({ success: true, data: newData }, { status: 201 });
-                }
-                console.log(res3)
-                console.log("commitment not made")
-                return NextResponse.json({ success: true });
-            }
+            await processPreviousDayData(uid, prevDay);
             return NextResponse.json({ success: true, data: newData }, { status: 201 });
         }
 
         return NextResponse.json({ success: true, data: updatedData }, { status: 200 });
     } catch (error) {
-        console.error("Error in POST /api/backend/webhook:", error);
-        return NextResponse.json(
-            { success: false, message: error.message },
-            { status: 500 }
-        );
+        console.error("Error in POST /api/backend/webhook:", error.message);
+        return NextResponse.json({ success: false, message: error.message }, { status: 500 });
     }
 }
