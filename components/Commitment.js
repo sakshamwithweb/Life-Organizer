@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 
 const Commitment = ({ uid }) => {
     const [commitments, setCommitments] = useState([])
+    const [ready, setReady] = useState(false)
     useEffect(() => {
         (async () => {
             const req = await fetch("/api/getCommitment", {
@@ -15,9 +16,14 @@ const Commitment = ({ uid }) => {
             if (res.success) setCommitments(res.commitments)
         })()
     }, [])
+
+
+    useEffect(() => {
+        if (commitments.length !== 0) setReady(true)
+    }, [commitments])
     return (
         <div>
-            {commitments.length > 0 ? commitments.map((commitment, index) => {
+            {ready ? commitments.map((commitment, index) => {
                 return (
                     <div key={index}>
                         <p>{commitment.title}</p>
