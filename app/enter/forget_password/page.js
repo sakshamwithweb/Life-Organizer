@@ -1,5 +1,4 @@
 "use client";
-import { redirect } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 
 const Page = () => {
@@ -35,7 +34,7 @@ const Page = () => {
             const res = await req.json()
             console.log(res)
             if (res.success) {
-                redirect("/dashboard")
+                window.location.href = "/dashboard";
             }
         })()
     }, [])

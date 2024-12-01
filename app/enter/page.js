@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 const timeZones = [
@@ -70,7 +69,7 @@ const Page = () => {
                 });
                 const res = await req.json();
                 if (res.success) {
-                    redirect("/dashboard");
+                    window.location.href = "/dashboard";
                 } else {
                     setWait(false);
                     alert(res.message);
@@ -133,7 +132,7 @@ const Page = () => {
                 const res = await req.json();
                 console.log(res);
                 if (res.success) {
-                    redirect("/dashboard");
+                    window.location.href = "/dashboard";
                 }
             } catch (error) {
                 console.error("Session check error:", error);
@@ -308,9 +307,8 @@ const Page = () => {
                         type="submit"
                         onClick={handleSubmit}
                         disabled={wait}
-                        className={`w-full bg-blue-500 ${
-                            wait && "pointer-events-none opacity-50"
-                        } text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-300`}
+                        className={`w-full bg-blue-500 ${wait && "pointer-events-none opacity-50"
+                            } text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-300`}
                     >
                         {isLogin ? "Login" : "Sign Up"}
                     </button>
