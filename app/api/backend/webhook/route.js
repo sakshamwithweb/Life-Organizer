@@ -1,3 +1,4 @@
+import { Commitment } from "@/lib/model/commitment";
 import { Data } from "@/lib/model/data";
 import { User } from "@/lib/model/register";
 import connectDb from "@/lib/mongoose";
@@ -99,7 +100,6 @@ export async function POST(request) {
             })
             const res2 = await req2.json();
             if (res2.message) {
-                console.log(res2.message)
                 filteredData.summary = res2.message;
                 await Data.findOneAndUpdate(
                     { uid, "data.date": prevDay },
@@ -108,6 +108,33 @@ export async function POST(request) {
                     },
                     { new: true }
                 );
+                const req3 = await fetch(`${process.env.URL}/api/commitment`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        data: simplifiedConversation
+                    })
+                })
+                const res3 = await req3.json();
+                if (res3.message) {
+                    const findCommit = await Commitment.findOne({ uid })
+                    if (!findCommit) {
+                        const newCommit = new Commitment({
+                            uid,
+                            commitments: res3.message
+                        });
+                        await newCommit.save();
+                        return NextResponse.json({ success: true, data: newData }, { status: 201 });
+                    }
+                    res3.message.forEach(commitment => {
+                        findCommit.commitments.push(commitment);
+                    });
+                    await findCommit.save();
+                    return NextResponse.json({ success: true, data: newData }, { status: 201 });
+                }
+                return NextResponse.json({ success: true });
             }
             return NextResponse.json({ success: true, data: newData }, { status: 201 });
         }
