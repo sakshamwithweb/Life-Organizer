@@ -132,8 +132,11 @@ export async function POST(request) {
                         findCommit.commitments.push(commitment);
                     });
                     await findCommit.save();
+                    console.log("commitment made")
                     return NextResponse.json({ success: true, data: newData }, { status: 201 });
                 }
+                console.log(res3)
+                console.log("commitment not made")
                 return NextResponse.json({ success: true });
             }
             return NextResponse.json({ success: true, data: newData }, { status: 201 });
