@@ -218,7 +218,6 @@ const Page = () => {
                                 />
                             </div>
 
-                            {/* Time Zone Select */}
                             <div className="mb-4">
                                 <label
                                     htmlFor="time-zone"
