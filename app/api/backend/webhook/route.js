@@ -87,7 +87,16 @@ export async function POST(request) {
                 speaker,
                 is_user,
             }));
-            console.log(simplifiedConversation);
+
+            const req2 = await fetch(`${process.env.URL}/api/summarize`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    data: simplifiedConversation
+                })
+            })
 
             return NextResponse.json({ success: true, data: newData }, { status: 201 });
         }

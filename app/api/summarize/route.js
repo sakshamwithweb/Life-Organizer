@@ -21,9 +21,9 @@ export async function POST(req) {
             messages: [
                 {
                     role: "system",
-                    content: "You are a helpful assistant who summarizes the day based on the conversations done that day.",
+                    content: "You are a helpful assistant who summarizes the day based on the conversations done that day. You write plain text, No formatting.",
                 },
-                { role: "user", content: `Summarize the following in short but detailed:\n${data}` },
+                { role: "user", content: `Summarize the following in short but detailed:\n${JSON.stringify(data)}` },
             ],
             model: "gpt-4",
         });
