@@ -28,7 +28,7 @@ export async function POST(req) {
             model: "gpt-4",
         });
 
-        const summary = completion.choices[0]?.message?.content?.message
+        const summary = completion.choices[0]?.message?.content
 
         if (!summary) {
             throw new Error("Summary generation failed.");
