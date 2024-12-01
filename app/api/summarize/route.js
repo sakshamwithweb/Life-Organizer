@@ -6,7 +6,7 @@ export async function POST(req) {
         const { data } = await req.json();
 
         if (!data) {
-            return NextResponse.json({ error: "No transcription data provided." }, { status: 400 });
+            throw new Error("No data provided.");
         }
 
         const openai = new OpenAI({
@@ -14,7 +14,7 @@ export async function POST(req) {
         });
 
         if (!process.env.OPENAI) {
-            return NextResponse.json({ error: "OpenAI API key is missing." }, { status: 500 });
+            throw new Error("OpenAI API key is missing.");
         }
 
         const completion = await openai.chat.completions.create({
@@ -31,11 +31,11 @@ export async function POST(req) {
         const summary = completion.choices[0]?.message?.content?.message
 
         if (!summary) {
-            return NextResponse.json({ error: "Failed to generate summary." }, { status: 500 });
+            throw new Error("Summary generation failed.");
         }
         return NextResponse.json({ message: summary });
     } catch (error) {
         console.error("Error processing request:", error);
-        return NextResponse.json({ error: "An unexpected error occurred."+error }, { status: 500 });
+        return NextResponse.json({ error: "An unexpected error occurred." + error }, { status: 500 });
     }
 }
