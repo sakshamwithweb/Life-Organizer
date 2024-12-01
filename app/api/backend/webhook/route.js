@@ -1,15 +1,13 @@
 import { Data } from "@/lib/model/data";
-import { User } from "@/lib/model/register"; // Import User model
+import { User } from "@/lib/model/register";
 import connectDb from "@/lib/mongoose";
 import { startOfDay } from "date-fns";
 import { NextResponse } from "next/server";
 
 export async function POST(request) {
     try {
-        // Connect to the database
         await connectDb();
 
-        // Parse URL and extract 'uid'
         const { searchParams } = new URL(request.url);
         const uid = searchParams.get("uid");
 
@@ -20,7 +18,6 @@ export async function POST(request) {
             );
         }
 
-        // Fetch the user and their timezone
         const findUser = await User.findOne({ omi_userid: uid });
         if (!findUser) {
             return NextResponse.json(
@@ -28,10 +25,8 @@ export async function POST(request) {
                 { status: 404 }
             );
         }
-        const userTimeZone = findUser.timeZone || "UTC"; // Default to UTC if timeZone is not set
-        console.log("User TimeZone:", userTimeZone);
+        const userTimeZone = findUser.timeZone || "UTC";
 
-        // Parse and validate request body
         const body = await request.json();
         const { segments } = body;
 
@@ -42,7 +37,6 @@ export async function POST(request) {
             );
         }
 
-        // Calculate the start of today in the user's timezone using Intl.DateTimeFormat
         const now = new Date();
         const startOfTodayInTimeZone = new Date(
             new Intl.DateTimeFormat("en-US", {
@@ -52,26 +46,19 @@ export async function POST(request) {
                 day: "numeric",
             }).format(now)
         );
-        console.log("Start of Today (User TimeZone):", startOfTodayInTimeZone);
 
-        // Determine if 'segments' is an array
         const isSegmentsArray = Array.isArray(segments);
-
-        // Prepare the conversation data to be pushed
         const conversationData = isSegmentsArray ? { $each: segments } : segments;
 
-        // Attempt to find and update the document atomically
         const updatedData = await Data.findOneAndUpdate(
             { uid, "data.date": startOfTodayInTimeZone },
             {
-                // Use $each if segments is an array to prevent nested arrays
                 $push: { "data.$.conversation": conversationData },
             },
             { new: true }
         );
 
         if (!updatedData) {
-            // If today's data doesn't exist, push a new entry
             const newConversation = isSegmentsArray ? segments : [segments];
             const newData = await Data.findOneAndUpdate(
                 { uid },

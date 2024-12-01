@@ -42,7 +42,7 @@ const Page = () => {
     const [otp, setOtp] = useState(0);
     const [uid, setUid] = useState(null);
     const [wait, setWait] = useState(false);
-    const [timeZone, setTimeZone] = useState(""); // New state for time zone
+    const [timeZone, setTimeZone] = useState("");
 
     const toggleForm = () => {
         setIsLogin(!isLogin);
@@ -82,7 +82,6 @@ const Page = () => {
             return;
         }
 
-        // Sign Up logic
         if (
             name.trim() === "" ||
             omi_userid.trim() === "" ||
@@ -156,7 +155,7 @@ const Page = () => {
                         password: password,
                         name: name,
                         omi_userid: omi_userid,
-                        timeZone: timeZone, // Include time zone in submission
+                        timeZone: timeZone,
                     }),
                 });
                 const res = await req.json();
