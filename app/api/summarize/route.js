@@ -28,7 +28,7 @@ export async function POST(req) {
             model: "gpt-4",
         });
 
-        const summary = completion.choices[0]?.message?.content;
+        const summary = completion.choices[0]?.message?.content?.message
 
         if (!summary) {
             return NextResponse.json({ error: "Failed to generate summary." }, { status: 500 });
