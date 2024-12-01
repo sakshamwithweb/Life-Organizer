@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 export async function POST(req) {
     try {
-        const { email, password, name, omi_userid } = await req.json();
+        const { email, password, name, omi_userid,timeZone } = await req.json();
         
         await connectDb();
 
@@ -13,6 +13,7 @@ export async function POST(req) {
             password,
             name,
             omi_userid,
+            timeZone
         });
 
         await newUser.save();

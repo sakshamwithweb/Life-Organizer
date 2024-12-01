@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 export async function POST(req) {
     try {
-        const { uid, otp, email, password, name, omi_userid } = await req.json();
+        const { uid, otp, email, password, name, omi_userid ,timeZone} = await req.json();
         await connectDb();
         const check = await Otp.findOne({ uid: uid })
         if (!check) return NextResponse.json({ message: "Error verifying OTP", success: false })
@@ -20,7 +20,7 @@ export async function POST(req) {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                email, password, name, omi_userid
+                email, password, name, omi_userid, timeZone
             })
         });
 
