@@ -76,9 +76,15 @@ export async function POST(request) {
                 uid,
                 "data.date": prevDay,
             });
-            if (!prevDayData) return NextResponse.json({ success: false });
-            console.log(prevDayData);
 
+            if (!prevDayData) return NextResponse.json({ success: false });
+
+            const filteredData = prevDayData.data.find(item => item.date.toISOString() === prevDay.toISOString());
+
+            if (!filteredData) return NextResponse.json({ success: false });
+
+            console.log(filteredData);
+            
             return NextResponse.json({ success: true, data: newData }, { status: 201 });
         }
 
