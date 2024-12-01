@@ -14,7 +14,7 @@ export async function POST(req) {
     const userData = await Data.findOne({ uid: user.omi_userid });
     if (!userData) return NextResponse.json({ message: "No data found for user" });
 
-    return NextResponse.json({ message: "Help page", data: userData.data });
+    return NextResponse.json({ message: "Help page", data: userData.data, uid: userData.uid });
   } catch (error) {
     console.error("Error fetching user data:", error);
     return NextResponse.json({ message: "Error fetching data", success: false });

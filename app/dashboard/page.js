@@ -1,5 +1,6 @@
 "use client";
 
+import Commitment from "@/components/Commitment";
 import React, { useEffect, useState } from "react";
 
 const Modal = ({ isOpen, onClose, title, children }) => {
@@ -59,6 +60,7 @@ const DashboardPage = () => {
   const [dataHierarchy, setDataHierarchy] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [uid, setUid] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalText, setModalText] = useState("");
 
@@ -96,6 +98,7 @@ const DashboardPage = () => {
           });
           const res1 = await req1.json();
           if (res1.message === "Help page") {
+            setUid(res1.uid)
             const hierarchy = organizeDataHierarchy(res1.data);
             setDataHierarchy(hierarchy);
             setLoading(false);
@@ -260,6 +263,7 @@ const DashboardPage = () => {
       <Modal isOpen={isModalOpen} onClose={closeModal} title="Summary">
         {modalText}
       </Modal>
+      {uid && <Commitment uid={uid} />}
     </div>
   );
 };
