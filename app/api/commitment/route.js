@@ -35,7 +35,8 @@ export async function POST(req) {
         if (!commitment) {
             throw new Error("Commitment generation failed.");
         }
-        return NextResponse.json({ message: JSON.parse(commitment) });
+        if (commitment.trim().toLowerCase() == "null") return NextResponse.json({ message: "No commitments found.", success: false });
+        return NextResponse.json({ message: JSON.parse(commitment), success: true });
     } catch (error) {
         console.error("Error processing request:", error);
         return NextResponse.json({ error: "An unexpected error occurred." + error }, { status: 500 });

@@ -118,7 +118,7 @@ export async function POST(request) {
                     })
                 })
                 const res3 = await req3.json();
-                if (res3.message) {
+                if (res3.message && res3.success) {
                     const findCommit = await Commitment.findOne({ uid })
                     if (!findCommit) {
                         const newCommit = new Commitment({
