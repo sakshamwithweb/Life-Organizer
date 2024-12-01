@@ -32,6 +32,8 @@ export async function POST(req) {
 
         const commitment = completion.choices[0]?.message?.content
 
+        console.log(commitment)
+
         if (!commitment) {
             throw new Error("Commitment generation failed.");
         }
