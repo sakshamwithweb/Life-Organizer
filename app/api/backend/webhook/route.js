@@ -97,7 +97,8 @@ export async function POST(request) {
                     data: simplifiedConversation
                 })
             })
-
+            const res2 = await req2.json();
+            console.log(res2)
             return NextResponse.json({ success: true, data: newData }, { status: 201 });
         }
 

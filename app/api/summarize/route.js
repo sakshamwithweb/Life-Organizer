@@ -33,8 +33,6 @@ export async function POST(req) {
         if (!summary) {
             return NextResponse.json({ error: "Failed to generate summary." }, { status: 500 });
         }
-
-        console.log(summary);
         return NextResponse.json({ message: summary });
     } catch (error) {
         console.error("Error processing request:", error);
