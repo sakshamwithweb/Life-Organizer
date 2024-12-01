@@ -98,7 +98,17 @@ export async function POST(request) {
                 })
             })
             const res2 = await req2.json();
-            console.log(res2)
+            if (res2.message) {
+                console.log(res2.message)
+                filteredData.summary = res2.message;
+                await Data.findOneAndUpdate(
+                    { uid, "data.date": prevDay },
+                    {
+                        $set: { "data.$.conversation": filteredData.conversation, "data.$.summary": res2.message },
+                    },
+                    { new: true }
+                );
+            }
             return NextResponse.json({ success: true, data: newData }, { status: 201 });
         }
 
