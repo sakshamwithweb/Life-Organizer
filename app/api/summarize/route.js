@@ -23,7 +23,7 @@ export async function POST(req) {
                     role: "system",
                     content: "You are a helpful assistant who summarizes the day based on the conversations done that day. You write plain text, No formatting.",
                 },
-                { role: "user", content: `Summarize the following in short but detailed:\n${JSON.stringify(data)}` },
+                { role: "user", content: `Summarize the following in short but detailed:\n${data}` },
             ],
             model: "gpt-4",
         });
@@ -38,6 +38,6 @@ export async function POST(req) {
         return NextResponse.json({ message: summary });
     } catch (error) {
         console.error("Error processing request:", error);
-        return NextResponse.json({ error: "An unexpected error occurred." }, { status: 500 });
+        return NextResponse.json({ error: "An unexpected error occurred."+error }, { status: 500 });
     }
 }
