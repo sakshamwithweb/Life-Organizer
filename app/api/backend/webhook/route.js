@@ -21,7 +21,7 @@ export async function POST(request) {
         }
 
         // Fetch the user and their timezone
-        const findUser = await User.findOne({ uid: uid });
+        const findUser = await User.findOne({ omi_userid: uid });
         if (!findUser) {
             return NextResponse.json(
                 { success: false, message: "User not found" },
