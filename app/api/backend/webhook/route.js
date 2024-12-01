@@ -82,9 +82,13 @@ export async function POST(request) {
             const filteredData = prevDayData.data.find(item => item.date.toISOString() === prevDay.toISOString());
 
             if (!filteredData) return NextResponse.json({ success: false });
+            const simplifiedConversation = filteredData.conversation.map(({ text, speaker, is_user }) => ({
+                text,
+                speaker,
+                is_user,
+            }));
+            console.log(simplifiedConversation);
 
-            console.log(filteredData);
-            
             return NextResponse.json({ success: true, data: newData }, { status: 201 });
         }
 
